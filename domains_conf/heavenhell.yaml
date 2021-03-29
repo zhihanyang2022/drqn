@@ -1,0 +1,5 @@
+name : "HeavenHell-v0"
+entry_point : "domains.heaven_hell:HeavenHellEnv"
+config:
+max_episode_steps : 40
+       
