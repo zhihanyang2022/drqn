@@ -11,5 +11,5 @@ update_target = 100
 replay_memory_capacity = 1000
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-sequence_length = 10  # more than necessary (6) TODO
+sequence_length = 25  # more than necessary (6) TODO
 burn_in_length = 0  # TODO

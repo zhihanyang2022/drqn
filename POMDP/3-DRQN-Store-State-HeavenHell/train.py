@@ -73,11 +73,8 @@ def main():
     online_net.train()
     target_net.train()
     memory = Memory(replay_memory_capacity)
-    epsilon = 0.1
+    epsilon = 1.0
     steps = 0
-    loss = 0
-
-    outcomes = []
 
     for e in range(1000):
 
@@ -116,20 +113,15 @@ def main():
                 if steps % update_target == 0:
                     update_target_model(online_net, target_net)
 
-        outcomes.append(reward)
-
-        print(f'Iteration {e} | Avg Reward {np.mean(outcomes[-20:])} | Eps {epsilon}')
-
         # score = score if score == 500.0 else score + 1
         # if running_score == 0:
         #     running_score = score
         # else:
         #     running_score = 0.99 * running_score + 0.01 * score
-        # if e % log_interval == 0:
-        #     print('{} episode | score: {:.2f} | epsilon: {:.2f}'.format(
-        #         e, running_score, epsilon))
-        #     writer.add_scalar('log/score', float(running_score), e)
-        #     writer.add_scalar('log/loss', float(loss), e)
+            # print('{} episode | score: {:.2f} | epsilon: {:.2f}'.format(
+            #     e, running_score, epsilon))
+        writer.add_scalar('log/score', float(reward), e)
+        writer.add_scalar('log/loss', float(loss), e)
         #
         # if running_score > goal_score:
         #     break
