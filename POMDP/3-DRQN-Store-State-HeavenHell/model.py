@@ -64,11 +64,11 @@ class DRQN(nn.Module):
         rewards = pad_sequence(batch.reward, batch_first=True).view(batch_size, sequence_length, -1)
         masks   = pad_sequence(batch.mask, batch_first=True).view(batch_size, sequence_length, -1)
 
-        h0 = torch.stack([rnn_state[0,0,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # each item has shape (1, 32, 16)
-        c0 = torch.stack([rnn_state[0,1,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # each item has shape (1, 32, 16)
+        h0 = torch.stack([rnn_state[0,0,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # has shape (1, 32, 16)
+        c0 = torch.stack([rnn_state[0,1,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # has shape (1, 32, 16)
 
-        h1 = torch.stack([rnn_state[1,0,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # each item has shape (1, 32, 16)
-        c1 = torch.stack([rnn_state[1,1,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # each item has shape (1, 32, 16)
+        h1 = torch.stack([rnn_state[1,0,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # has shape (1, 32, 16)
+        c1 = torch.stack([rnn_state[1,1,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # has shape (1, 32, 16)
 
         # states = torch.stack(batch.state).view(batch_size, sequence_length, online_net.num_inputs)
         # next_states = torch.stack(batch.next_state).view(batch_size, sequence_length, online_net.num_inputs)
