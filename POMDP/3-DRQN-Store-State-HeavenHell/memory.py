@@ -28,10 +28,15 @@ class Memory(object):
         for batch_idx in batch_indexes:
             episode = self.memory[batch_idx]
 
-            print(len(episode), sequence_length)
+            if len(episode) >= sequence_length:
 
-            start = random.randint(0, len(episode) - sequence_length)
-            transitions = episode[start:start + sequence_length]
+                start = random.randint(0, len(episode) - sequence_length)
+                transitions = episode[start:start + sequence_length]
+
+            else:
+
+                transitions = episode
+
             batch = Transition(*zip(*transitions))
 
             batch_state.append(torch.stack(list(batch.state)))

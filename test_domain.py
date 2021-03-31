@@ -1,4 +1,5 @@
 import gym
+import os
 from gym.envs.registration import register
 import yaml
 
@@ -14,5 +15,10 @@ register(
 )
 
 env = gym.make(env_conf['name'])
-print(env.reset())
+print(len(env.reset()))
+print('=== State ===')
+print(env.get_state())
+print('=== Belief ===')
+print(env.get_belief())
+print(len(env.get_belief()))
 # env.render()

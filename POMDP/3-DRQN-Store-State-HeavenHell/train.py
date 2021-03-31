@@ -1,6 +1,5 @@
 import os
 import sys
-import gym
 import random
 import numpy as np
 
@@ -27,20 +26,39 @@ def update_target_model(online_net, target_net):
     # Target <- Net
     target_net.load_state_dict(online_net.state_dict())
 
-def state_to_partial_observability(state):
-    state = state[[0, 2]]
-    return state
-
+def one_hot_encode_obs(obs:np.array):
+	index = int(obs[0])
+	one_hot_repr = np.zeros((11, ))
+	one_hot_repr[index] = 1
+	return one_hot_repr
 
 def main():
-    env = gym.make(env_name)
+
+    import gym
+    from gym.envs.registration import register
+    import yaml
+
+    import sys
+    sys.path.append(os.getcwd())
+
+    with open('domains_conf/heavenhell.yaml') as file:
+        env_conf = yaml.load(file, Loader=yaml.FullLoader)
+
+    register(
+        id=env_conf['name'],
+        entry_point=env_conf['entry_point'],
+        kwargs=env_conf['config'],
+        max_episode_steps=env_conf['max_episode_steps']
+    )
+
+    env = gym.make(env_conf['name'])
+
     env.seed(500)
     torch.manual_seed(500)
 
-    # num_inputs = env.observation_space.shape[0]
-    num_inputs = 2
+    num_inputs = 11
     num_actions = env.action_space.n
-    print('state size:', num_inputs)
+    print('observation size:', num_inputs)
     print('action size:', num_actions)
 
     online_net = DRQN(num_inputs, num_actions)
@@ -60,34 +78,34 @@ def main():
     steps = 0
     loss = 0
 
-    for e in range(30000):
+    for e in range(1000):
         done = False
 
         score = 0
-        state = env.reset()
-        state = state_to_partial_observability(state)
-        state = torch.Tensor(state).to(device)
+        obs = env.reset()
+        obs = one_hot_encode_obs(obs)
+        obs = torch.Tensor(obs).to(device)
 
         hidden = (torch.Tensor().new_zeros(1, 1, 16), torch.Tensor().new_zeros(1, 1, 16))
 
         while not done:
             steps += 1
 
-            action, new_hidden = get_action(state, target_net, epsilon, env, hidden)
-            next_state, reward, done, _ = env.step(action)
+            action, new_hidden = get_action(obs, target_net, epsilon, env, hidden)
+            next_obs, reward, done, _ = env.step(action)
+            next_obs = one_hot_encode_obs(next_obs)
 
-            next_state = state_to_partial_observability(next_state)
-            next_state = torch.Tensor(next_state)
+            next_obs = torch.Tensor(next_obs)
 
             mask = 0 if done else 1
             reward = reward if not done or score == 499 else -1
 
-            memory.push(state, next_state, action, reward, mask, hidden)
+            memory.push(obs, next_obs, action, reward, mask, hidden)
             hidden = new_hidden
 
             score += reward
-            state = next_state
-
+            obs = next_obs
+            
             if steps > initial_exploration and len(memory) > batch_size:
                 epsilon -= 0.00005
                 epsilon = max(epsilon, 0.1)
@@ -111,7 +129,6 @@ def main():
 
         if running_score > goal_score:
             break
-
 
 if __name__=="__main__":
     main()
