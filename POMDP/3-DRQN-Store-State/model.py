@@ -30,8 +30,10 @@ class DRQN(nn.Module):
 
     @classmethod
     def train_model(cls, online_net, target_net, optimizer, batch):
+
         def slice_burn_in(item):
             return item[:, burn_in_length:, :]
+
         states = torch.stack(batch.state).view(batch_size, sequence_length, online_net.num_inputs)
         next_states = torch.stack(batch.next_state).view(batch_size, sequence_length, online_net.num_inputs)
         actions = torch.stack(batch.action).view(batch_size, sequence_length, -1).long()
@@ -39,11 +41,23 @@ class DRQN(nn.Module):
         masks = torch.stack(batch.mask).view(batch_size, sequence_length, -1)
         rnn_state = torch.stack(batch.rnn_state).view(batch_size, sequence_length, 2, -1)
 
-        
+        """
+        states: (32, 8, 2)
+        next_states: (32, 8, 2)
+        actions: (32, 8, 1)
+        rewards: (32, 8, 1)
+        masks: (32, 8, 1)
+        rnn_state: (32, 8, 2, 16), which represents (batch, seq_length, hidden_state_num, hidden_state_size)
+        """
 
         [h0, c0] = rnn_state[:, 0, :, :].transpose(0, 1)
         h0 = h0.unsqueeze(0).detach()
         c0 = c0.unsqueeze(0).detach()
+
+        """
+        h0: (32, 16)
+        c0: (32, 16)
+        """
 
         [h1, c1] = rnn_state[:, 1, :, :].transpose(0, 1)
         h1 = h1.unsqueeze(0).detach()
@@ -52,6 +66,11 @@ class DRQN(nn.Module):
         pred, _ = online_net(states, (h0, c0))
         next_pred, _ = target_net(next_states, (h1, c1))
 
+        """
+        pred: (32, 8, 2)
+        next_pred: (32, 8, 2)
+        """
+
         pred = slice_burn_in(pred)
         next_pred = slice_burn_in(next_pred)
         actions = slice_burn_in(actions)
@@ -59,6 +78,10 @@ class DRQN(nn.Module):
         masks = slice_burn_in(masks)
         
         pred = pred.gather(2, actions)
+
+        """
+        pred: (32, 8, 1)
+        """
         
         target = rewards + masks * gamma * next_pred.max(2, keepdim=True)[0]
 

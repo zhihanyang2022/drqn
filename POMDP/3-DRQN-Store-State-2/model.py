@@ -60,9 +60,9 @@ class DRQN(nn.Module):
             enforce_sorted=False
         )
 
-        actions = pad_sequence(batch.action, batch_first=True).view(batch_size, sequence_length, -1).long()
-        rewards = pad_sequence(batch.reward, batch_first=True).view(batch_size, sequence_length, -1)
-        masks   = pad_sequence(batch.mask, batch_first=True).view(batch_size, sequence_length, -1)
+        actions   = pad_sequence(batch.action, batch_first=True).view(batch_size, sequence_length, -1).long()
+        rewards   = pad_sequence(batch.reward, batch_first=True).view(batch_size, sequence_length, -1)
+        masks     = pad_sequence(batch.mask, batch_first=True).view(batch_size, sequence_length, -1)
 
         h0 = torch.stack([rnn_state[0,0,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # each item has shape (1, 32, 16)
         c0 = torch.stack([rnn_state[0,1,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # each item has shape (1, 32, 16)

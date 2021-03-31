@@ -15,10 +15,13 @@ register(
 )
 
 env = gym.make(env_conf['name'])
-print(len(env.reset()))
-print('=== State ===')
-print(env.get_state())
-print('=== Belief ===')
-print(env.get_belief())
-print(len(env.get_belief()))
-# env.render()
+
+print('Action space:', env.action_space)
+
+initial_obs_list = []
+for i in range(100):
+    initial_obs_list.append(env.reset()[0])
+
+for index in range(10):
+    if index in initial_obs_list:
+        print(index)
