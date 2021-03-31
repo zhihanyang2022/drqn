@@ -75,6 +75,7 @@ def main():
     memory = Memory(replay_memory_capacity)
     epsilon = 1.0
     steps = 0
+    loss = 0
 
     for e in range(1000):
 

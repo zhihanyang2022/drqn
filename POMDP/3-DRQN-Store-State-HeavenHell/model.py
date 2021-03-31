@@ -15,8 +15,9 @@ class DRQN(nn.Module):
         self.num_outputs = num_outputs
 
         self.lstm = nn.LSTM(input_size=num_inputs, hidden_size=16, batch_first=True)
-        self.fc1 = nn.Linear(16, 128)
-        self.fc2 = nn.Linear(128, num_outputs)
+        self.fc1 = nn.Linear(16, 16)
+        self.fc2 = nn.Linear(16, 16)
+        self.fc3 = nn.Linear(16, num_outputs)
 
         for m in self.modules():
             if isinstance(m, nn.Linear):
@@ -28,8 +29,8 @@ class DRQN(nn.Module):
         if not inference:
             out, _ = pad_packed_sequence(sequence=out, batch_first=True, total_length=sequence_length)
 
-        out = F.relu(self.fc1(out))
-        qvalue = self.fc2(out)
+        out = F.leaky_relu(self.fc2(F.leaky_relu(self.fc1(out))))
+        qvalue = self.fc3(out)
 
         return qvalue, hidden
 
