@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/POMDP/3-DRQN-Store-State" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/POMDP/3-DRQN-Store-State-HeavenHell" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/POMDP/3-DRQN-Store-State-HeavenHellSimple" isTestSource="false" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.7 (pomdpr)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -10,9 +10,11 @@ from model import DRQN
 from memory import Memory
 from tensorboardX import SummaryWriter
 
-from config import env_name, initial_exploration, batch_size, update_target, goal_score, log_interval, device, replay_memory_capacity, lr, sequence_length
+from config import env_name, initial_exploration, batch_size, update_target, log_interval, device, replay_memory_capacity, lr, sequence_length
 
 from collections import deque
+
+from heaven_hell_simple import HeavenHellSimple
 
 def get_action(state, target_net, epsilon, env, hidden):
     action, hidden = target_net.get_action(state, hidden)
@@ -26,38 +28,19 @@ def update_target_model(online_net, target_net):
     # Target <- Net
     target_net.load_state_dict(online_net.state_dict())
 
-def one_hot_encode_obs(obs:np.array):
-    index = int(obs[0])
-    one_hot_repr = np.zeros((11, ))
-    one_hot_repr[index] = 1
+def one_hot_encode_obs(obs:int):
+    one_hot_repr = np.zeros((HeavenHellSimple().observation_space_dim, ))
+    one_hot_repr[obs] = 1
     return one_hot_repr
 
 def main():
 
-    import gym
-    from gym.envs.registration import register
-    import yaml
+    env = HeavenHellSimple()
 
-    import sys
-    sys.path.append(os.getcwd())
-
-    with open('domains_conf/heavenhell.yaml') as file:
-        env_conf = yaml.load(file, Loader=yaml.FullLoader)
-
-    register(
-        id=env_conf['name'],
-        entry_point=env_conf['entry_point'],
-        kwargs=env_conf['config'],
-        max_episode_steps=env_conf['max_episode_steps']
-    )
-
-    env = gym.make(env_conf['name'])
-
-    env.seed(500)
     torch.manual_seed(500)
 
-    num_inputs = 11
-    num_actions = env.action_space.n
+    num_inputs = env.observation_space_dim
+    num_actions = env.action_space_dim
     print('observation size:', num_inputs)
     print('action size:', num_actions)
 
@@ -76,8 +59,10 @@ def main():
     epsilon = 1.0
     steps = 0
     loss = 0
+    running_score = 0
 
-    for e in range(int(2e4)):
+    num_episodes = 2000
+    for e in range(num_episodes):
 
         done = False
 
@@ -91,7 +76,7 @@ def main():
             steps += 1
 
             action, new_hidden = get_action(obs, target_net, epsilon, env, hidden)
-            next_obs, reward, done, _ = env.step(action)
+            next_obs, reward, done = env.step(action)
             next_obs = one_hot_encode_obs(next_obs)
 
             next_obs = torch.Tensor(next_obs)
@@ -105,7 +90,7 @@ def main():
             obs = next_obs
             
             if steps > initial_exploration and len(memory) > batch_size:
-                epsilon -= 0.00005
+                epsilon -= 0.0005
                 epsilon = max(epsilon, 0.1)
 
                 batch = memory.sample(batch_size)
@@ -113,6 +98,8 @@ def main():
 
                 if steps % update_target == 0:
                     update_target_model(online_net, target_net)
+
+        running_score = 0.95 * running_score + 0.05 * reward
 
         # score = score if score == 500.0 else score + 1
         # if running_score == 0:
@@ -122,7 +109,8 @@ def main():
             # print('{} episode | score: {:.2f} | epsilon: {:.2f}'.format(
             #     e, running_score, epsilon))
 
-        print(f'Iteration {e} | {int(2e4)}')
+        if e % log_interval == 0:
+            print(f'Iteration {e} / {num_episodes} | Running score {round(running_score, 2)} | Epsilon {round(epsilon, 2)}')
 
         writer.add_scalar('log/score', float(reward), e)
         writer.add_scalar('log/loss', float(loss), e)
