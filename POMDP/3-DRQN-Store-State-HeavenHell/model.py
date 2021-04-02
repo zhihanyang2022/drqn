@@ -6,18 +6,21 @@ import torch.nn.functional as F
 
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 
-from config import gamma, device, batch_size, sequence_length, burn_in_length
+# from config import burn_in_length
 
 class DRQN(nn.Module):
-    def __init__(self, num_inputs, num_outputs):
+
+    def __init__(self, num_inputs, num_outputs, sequence_length):
+
         super(DRQN, self).__init__()
         self.num_inputs = num_inputs
         self.num_outputs = num_outputs
 
+        self.sequence_length = sequence_length
+
         self.lstm = nn.LSTM(input_size=num_inputs, hidden_size=16, batch_first=True)
-        self.fc1 = nn.Linear(16, 16)
-        self.fc2 = nn.Linear(16, 16)
-        self.fc3 = nn.Linear(16, num_outputs)
+        self.fc1 = nn.Linear(16, 128)
+        self.fc2 = nn.Linear(128, num_outputs)
 
         for m in self.modules():
             if isinstance(m, nn.Linear):
@@ -27,23 +30,24 @@ class DRQN(nn.Module):
         # x [batch_size, sequence_length, num_inputs]
         out, hidden = self.lstm(x, hidden)
         if not inference:
-            out, _ = pad_packed_sequence(sequence=out, batch_first=True, total_length=sequence_length)
+            out, _ = pad_packed_sequence(sequence=out, batch_first=True, total_length=self.sequence_length)
 
-        out = F.leaky_relu(self.fc2(F.leaky_relu(self.fc1(out))))
-        qvalue = self.fc3(out)
+        out = F.relu(self.fc1(out))
+        qvalue = self.fc2(out)
 
         return qvalue, hidden
 
 
     @classmethod
-    def train_model(cls, online_net, target_net, optimizer, batch):
+    def train_model(cls, online_net, target_net, optimizer, batch, batch_size, sequence_length, gamma):
 
-        def slice_burn_in(item):
-            return item[:, burn_in_length:, :]
+        # def slice_burn_in(item):
+        #     return item[:, burn_in_length:, :]
 
         # batch.state is a list of tensors of shape (seq_length, input_dim)
         # so seq.size()[0] = the length of the sequence
         lengths = np.array([seq.size()[0] for seq in batch.state])
+        max_length = np.max(lengths)
 
         # ===== compute loss mask =====
 
@@ -76,9 +80,10 @@ class DRQN(nn.Module):
             enforce_sorted=False
         )
 
-        actions = pad_sequence(batch.action, batch_first=True).view(batch_size, sequence_length, -1).long()  # has shape (bs, seq_len, 1)
-        rewards = pad_sequence(batch.reward, batch_first=True).view(batch_size, sequence_length, -1)  # has shape (bs, seq_len, 1)
-        masks   = pad_sequence(batch.mask,   batch_first=True).view(batch_size, sequence_length, -1)  # has shape (bs, seq_len, 1)
+        # max_length == sequence_length most of the times, but not always
+        actions = pad_sequence(batch.action, batch_first=True).view(batch_size, max_length, -1).long()  # has shape (bs, seq_len, 1)
+        rewards = pad_sequence(batch.reward, batch_first=True).view(batch_size, max_length, -1)  # has shape (bs, seq_len, 1)
+        masks   = pad_sequence(batch.mask,   batch_first=True).view(batch_size, max_length, -1)  # has shape (bs, seq_len, 1)
 
         h0 = torch.stack([rnn_state[0,0,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # has shape (1, bs, hidden_size)
         c0 = torch.stack([rnn_state[0,1,:] for rnn_state in batch.rnn_state]).unsqueeze(0).detach()  # has shape (1, bs, hidden_size)
@@ -104,12 +109,12 @@ class DRQN(nn.Module):
         pred, _ = online_net(states, (h0, c0), inference=False)
         next_pred, _ = target_net(next_states, (h1, c1), inference=False)
 
-        if burn_in_length > 0:
-            pred = slice_burn_in(pred)
-            next_pred = slice_burn_in(next_pred)
-            actions = slice_burn_in(actions)
-            rewards = slice_burn_in(rewards)
-            masks = slice_burn_in(masks)
+        # if burn_in_length > 0:
+        #     pred = slice_burn_in(pred)
+        #     next_pred = slice_burn_in(next_pred)
+        #     actions = slice_burn_in(actions)
+        #     rewards = slice_burn_in(rewards)
+        #     masks = slice_burn_in(masks)
         
         pred = pred.gather(2, actions).squeeze()  # has shape (bs, seq_len)
         
@@ -120,6 +125,7 @@ class DRQN(nn.Module):
         # loss = F.mse_loss(pred, target.detach())
         optimizer.zero_grad()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(online_net.parameters(), 1.0)
         optimizer.step()
 
         return loss

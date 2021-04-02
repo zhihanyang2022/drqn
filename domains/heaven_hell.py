@@ -11,6 +11,7 @@ class HeavenHellEnv(gym.Env):
 		self.env = gym.make("POMDP-heavenhell-episodic-v0")
 		self.action_space = self.env.action_space
 		self.observation_space = spaces.Box(low=0, high=11, shape=(1,), dtype=np.int32)
+		self.observation_space_dim = 11
 		self.state_space = self.env.state_space
 
 	def close(self):

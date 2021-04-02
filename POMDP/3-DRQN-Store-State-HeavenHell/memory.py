@@ -1,16 +1,16 @@
 import random
 from collections import namedtuple, deque
-from config import sequence_length
 import numpy as np
 import torch
 
 Transition = namedtuple('Transition', ('state', 'next_state', 'action', 'reward', 'mask', 'rnn_state'))
 
 class Memory(object):
-    def __init__(self, capacity):
+    def __init__(self, capacity, sequence_length):
         self.memory = deque(maxlen=capacity)
         self.local_memory = []
         self.capacity = capacity
+        self.sequence_length = sequence_length
 
     def push(self, state, next_state, action, reward, mask, rnn_state):
         self.local_memory.append(Transition(state, next_state, action, reward, mask, torch.stack(rnn_state).view(2, -1)))
@@ -28,10 +28,10 @@ class Memory(object):
         for batch_idx in batch_indexes:
             episode = self.memory[batch_idx]
 
-            if len(episode) >= sequence_length:
+            if len(episode) >= self.sequence_length:
 
-                start = random.randint(0, len(episode) - sequence_length)
-                transitions = episode[start:start + sequence_length]
+                start = random.randint(0, len(episode) - self.sequence_length)
+                transitions = episode[start:start + self.sequence_length]
 
             else:
 

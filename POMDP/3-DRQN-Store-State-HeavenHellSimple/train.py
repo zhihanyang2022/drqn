@@ -16,9 +16,16 @@ import wandb
 from heaven_hell_simple import HeavenHellSimple
 
 # ==================================================
+# for debugging
+
+use_wandb = True
+
+# ==================================================
+
+# ==================================================
 # hyper-parameters that need tuning
 
-# python POMDP/3-DRQN-Store-State-HeavenHellSimple/train.py --lr=0.00005 --use_experts=0 --seed=1
+# e.g. python POMDP/3-DRQN-Store-State-HeavenHellSimple/train.py --lr=0.00005 --use_experts=0 --seed=1
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, help='learning rate (e.g., 0.001)')
