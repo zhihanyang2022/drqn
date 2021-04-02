@@ -1,0 +1,22 @@
+{
+    "os": "Darwin-19.6.0-x86_64-i386-64bit",
+    "python": "3.7.10",
+    "heartbeatAt": "2021-04-02T11:16:26.230028",
+    "startedAt": "2021-04-02T11:16:22.884248",
+    "docker": null,
+    "cpu_count": 4,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "POMDP/3-DRQN-Store-State-HeavenHellSimple/test_wandb.py",
+    "codePath": "POMDP/3-DRQN-Store-State-HeavenHellSimple/test_wandb.py",
+    "git": {
+        "remote": "https://github.com/zhihanyang2022/drqn",
+        "commit": "a009e8a060b19ae57f6cc2136ce26d6f029e3503"
+    },
+    "email": "yangz2@carleton.edu",
+    "root": "/Users/yangzhihan/Desktop/projects/drqn",
+    "host": "zyang.local",
+    "username": "yangzhihan",
+    "executable": "/Users/yangzhihan/miniconda3/envs/pomdpr/bin/python"
+}
