@@ -170,7 +170,7 @@ for e in range(max_episodes):
         next_obs, reward, done, _ = env.step(action)
         next_obs = one_hot_encode_obs(next_obs)
 
-        next_obs = torch.Tensor(next_obs)
+        next_obs = torch.Tensor(next_obs).to(device)
 
         mask = 0 if done else 1
 
