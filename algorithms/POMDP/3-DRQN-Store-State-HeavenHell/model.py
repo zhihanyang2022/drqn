@@ -121,7 +121,7 @@ class DRQN(nn.Module):
         target = rewards + masks * gamma * next_pred.max(2, keepdim=True)[0]
         target = target.squeeze()  # has shape (bs, seq_len)
 
-        loss = torch.mean(((pred - target.detach()) ** 2) * loss_mask)
+        loss = torch.mean(((pred - target.detach()) ** 2) * loss_mask.double())
         # loss = F.mse_loss(pred, target.detach())
         optimizer.zero_grad()
         loss.backward()
