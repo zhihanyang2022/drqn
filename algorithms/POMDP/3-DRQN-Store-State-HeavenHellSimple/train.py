@@ -134,8 +134,6 @@ for e in range(max_episodes):
     obs = torch.Tensor(obs).to(device)
 
     hidden = (torch.Tensor().new_zeros(1, 1, 16), torch.Tensor().new_zeros(1, 1, 16))
-    hidden[0].to(device)
-    hidden[1].to(device)
 
     while not done:
 

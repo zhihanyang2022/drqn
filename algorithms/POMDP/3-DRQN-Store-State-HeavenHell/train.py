@@ -24,6 +24,7 @@ use_wandb = True
 # hyper-parameters that need tuning
 
 # e.g. python algorithms/POMDP/3-DRQN-Store-State-HeavenHell/train.py --lr=0.00005 --use_experts=0 --seed=1 --debug_mode=1 --device_str=cpu
+# e.g. python algorithms/POMDP/3-DRQN-Store-State-HeavenHell/train.py --lr=0.00005 --use_experts=0 --seed=1 --debug_mode=1 --device_str=cuda
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, help='learning rate (e.g., 0.001)')
@@ -158,6 +159,8 @@ for e in range(max_episodes):
     obs = torch.Tensor(obs).to(device)
 
     hidden = (torch.Tensor().new_zeros(1, 1, 16), torch.Tensor().new_zeros(1, 1, 16))
+    hidden[0].to(device)
+    hidden[1].to(device)
 
     while not done:
 
