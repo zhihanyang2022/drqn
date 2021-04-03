@@ -13,6 +13,8 @@ from memory import Memory
 import argparse
 import wandb
 
+import time
+
 # ==================================================
 # for debugging
 
@@ -150,6 +152,8 @@ steps = 0  # number of actions taken in the environment / number of parameter up
 loss = 0
 running_score = 0
 
+start_time = time.perf_counter()
+
 for e in range(max_episodes):
 
     done = False
@@ -202,4 +206,8 @@ for e in range(max_episodes):
     running_score = 0.95 * running_score + 0.05 * reward
 
     if e % log_interval == 0:
+        current_time = time.perf_counter()
+        print('==========')
         print(f'Iteration {e} / {max_episodes} | Running score {round(running_score, 2)} | Epsilon {round(epsilon, 2)}')
+        print(f'Time remaining: {round((current_time - start_time) * (max_episodes / e) / 60 / 60, 2)} hours')
+        print('==========')
