@@ -205,7 +205,7 @@ for e in range(max_episodes):
 
     running_score = 0.95 * running_score + 0.05 * reward
 
-    if e % log_interval == 0:
+    if e % log_interval == 0 and e != 0:
         current_time = time.perf_counter()
         print('==========')
         print(f'Iteration {e} / {max_episodes} | Running score {round(running_score, 2)} | Epsilon {round(epsilon, 2)}')
