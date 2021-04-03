@@ -1,0 +1,72 @@
+fsc : preamble_list start_node structure_list
+    ;
+
+preamble_list : preamble_list preamble_item
+              | preamble_item
+              ;
+
+preamble_item : preamble_node
+              | preamble_action
+              ;
+
+preamble_node : NODES COLON INT
+              | NODES COLON name_list
+              ;
+
+preamble_action : ACTIONS COLON INT
+                | ACTIONS COLON name_list
+                ;
+
+name_list : name_list STRING
+          | STRING
+          ;
+
+# TODO think this through again
+start_node : START COLON bmatrix
+           | START COLON node
+           | START INCLUDE COLON node_list
+           | START EXCLUDE COLON node_list
+           ;
+
+node_list : node_list node
+          | node
+          ;
+
+node : INT
+     | STRING
+     | ASTERISK
+     ;
+
+action : INT
+       | STRING
+       | ASTERISK
+       ;
+
+bmatrix : bmatrix bool
+        | bool
+        ;
+
+structure_list : structure_list a_structure
+               | structure_list n_structure
+               |
+               ;
+
+a_structure : A COLON node COLON action bool
+            | A COLON node bmatrix
+            | A COLON node ALL
+            | A COLON node NONE
+            | A COLON ALL
+            | A COLON NONE
+            ;
+
+n_structure : N COLON node COLON node bool
+            | N COLON node bmatrix
+            | N COLON node ALL
+            | N COLON node NONE
+            | N COLON ALL
+            | N COLON NONE
+            ;
+
+bool : ONE
+     | ZERO
+     ;

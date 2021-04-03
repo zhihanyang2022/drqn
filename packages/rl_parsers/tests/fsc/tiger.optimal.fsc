@@ -1,0 +1,25 @@
+nodes: 5
+actions: listen open-left open-right
+observations: obs-left obs-right
+
+start: 2
+
+A: 0  0 1 0
+A: 1  1 0 0
+A: 2  1 0 0
+A: 3  1 0 0
+A: 4  0 0 1
+
+T: obs-left
+0 0 1 0 0
+0 0 1 0 0
+0 0 0 1 0
+0 0 0 0 1
+0 0 1 0 0
+
+T: obs-right
+0 0 1 0 0
+1 0 0 0 0
+0 1 0 0 0
+0 0 1 0 0
+0 0 1 0 0

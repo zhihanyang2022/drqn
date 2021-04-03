@@ -1,0 +1,69 @@
+# This is the POMDP source for the Load/Unload problem used by
+# Nicolas Meuleau, Peshkin and Kaelbling. This is a simple POMDP
+# of 10 states as follows: A road is split into 5 segments. At
+# the left end we pick up an item from an infinite pile. At the right,
+# we drop our item. A reward of 1 is received for picking up or putting
+# down, but only one item can be carried at a time.
+# Observations are: 'loading' when in the leftmost state
+#                   'unloading' in the rightmost state
+#                   'travelling' otherwise
+# To act optimally the belief state must encode whether we have an item or
+# not. This is an interesting problem because we require only 1 bit
+# of memory to act optially, so we can use efficient techniques that do
+# not attempt to determine a distribution over states. Actions are simply
+# move_left or move_right. Moving in an impossible direction leaves the
+# agent where it is. This is also a nice problem because we can easily
+# increase the mixing time by increasing the length of the road.
+# Doug Aberdeen, 2001
+discount: 0.95
+values: reward
+states: 10
+actions:  right left
+observations: loading unloading travel
+
+start: uniform
+# Even columns (starting from 0) are loaded
+# Odd columns are unloaded
+
+#Load in leftmost
+
+T : left
+1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 
+#L0  U0  L1  U1  L2  U2  L3  U3  L4  U4
+# 0   1   2   3   4   5   6   7   8   9
+
+T : right
+0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 0.0
+0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0
+0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0
+0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1.0 
+
+O : *
+1.0 0.0 0.0
+1.0 0.0 0.0
+0.0 0.0 1.0
+0.0 0.0 1.0
+0.0 0.0 1.0
+0.0 0.0 1.0
+0.0 0.0 1.0
+0.0 0.0 1.0
+0.0 1.0 0.0
+0.0 1.0 0.0
+
+R : * : 1 : * : * 1.0
+R : * : 8 : * : * 1.0
