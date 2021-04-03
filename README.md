@@ -6,7 +6,7 @@ How to use this repo:
 - `cd packages`
 - `conda create --name pomdpr python=3.7` where `pomdpr` stands for POMDP and Robotics
 - `conda activate pomdpr`
-- `chmod -x install_packages.sh` where `chmod` makes the bash script executable on your device
+- `chmod +x install_packages.sh` where `chmod` makes the bash script executable on your device
 - `./install_packages.sh` installs `numpy scipy torch gym PyYAML wandb` and `rl_parsers` and `gym-pomdp` (these two are stored inside `drqn/packages`)
 - `cd ..` back to the top level of the repo
 - Test your installation using `python algorithms/POMDP/3-DRQN-Store-State-HeavenHell/train.py --lr=0.00005 --use_experts=0 --seed=1 --debug_mode=1` where `debug_mode=1` makes sure that `wandb` is not used
