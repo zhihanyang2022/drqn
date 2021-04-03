@@ -129,8 +129,8 @@ num_actions = env.action_space.n
 print('observation size:', num_inputs)
 print('action size:', num_actions)
 
-online_net = DRQN(num_inputs, num_actions, sequence_length)
-target_net = DRQN(num_inputs, num_actions, sequence_length)
+online_net = DRQN(num_inputs, num_actions)
+target_net = DRQN(num_inputs, num_actions)
 update_target_model(online_net, target_net)
 
 optimizer = optim.Adam(online_net.parameters(), lr=lr)
@@ -181,7 +181,7 @@ for e in range(max_episodes):
         if len(memory) > batch_size:
 
             batch = memory.sample(batch_size)
-            loss = DRQN.train_model(online_net, target_net, optimizer, batch, batch_size, sequence_length, gamma)
+            loss = DRQN.train_model(online_net, target_net, optimizer, batch, batch_size, gamma, device)
 
             if steps % update_target == 0:
                 update_target_model(online_net, target_net)

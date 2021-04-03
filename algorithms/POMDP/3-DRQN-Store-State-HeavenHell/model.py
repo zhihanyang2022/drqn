@@ -10,13 +10,11 @@ from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_se
 
 class DRQN(nn.Module):
 
-    def __init__(self, num_inputs, num_outputs, sequence_length):
+    def __init__(self, num_inputs, num_outputs):
 
         super(DRQN, self).__init__()
         self.num_inputs = num_inputs
         self.num_outputs = num_outputs
-
-        self.sequence_length = sequence_length
 
         self.lstm = nn.LSTM(input_size=num_inputs, hidden_size=16, batch_first=True)
         self.fc1 = nn.Linear(16, 128)
@@ -26,20 +24,19 @@ class DRQN(nn.Module):
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform(m.weight)
 
-    def forward(self, x, hidden=None, inference=True):
-        # x [batch_size, sequence_length, num_inputs]
+    def forward(self, x, hidden=None, inference=True, max_length=None):
+
         out, hidden = self.lstm(x, hidden)
         if not inference:
-            out, _ = pad_packed_sequence(sequence=out, batch_first=True, total_length=self.sequence_length)
+            out, _ = pad_packed_sequence(sequence=out, batch_first=True, total_length=max_length)
 
         out = F.relu(self.fc1(out))
         qvalue = self.fc2(out)
 
         return qvalue, hidden
 
-
     @classmethod
-    def train_model(cls, online_net, target_net, optimizer, batch, batch_size, sequence_length, gamma):
+    def train_model(cls, online_net, target_net, optimizer, batch, batch_size, gamma, device):
 
         # def slice_burn_in(item):
         #     return item[:, burn_in_length:, :]
@@ -51,7 +48,7 @@ class DRQN(nn.Module):
 
         # ===== compute loss mask =====
 
-        # for example, if sequence_length == 3, then lower_triangular_matrix =
+        # for example, if max_length == 3, then lower_triangular_matrix =
         # 1 0 0
         # 1 1 0
         # 1 1 1
@@ -62,7 +59,7 @@ class DRQN(nn.Module):
         # 1 0 0
         # which corresponds to lengths correctly
 
-        lower_triangular_matrix = np.tril(np.ones((sequence_length, sequence_length)))
+        lower_triangular_matrix = np.tril(np.ones((max_length, max_length)))
         loss_mask = lower_triangular_matrix[lengths-1]  # first convert from 1-based to 0-based indexing
         loss_mask = torch.tensor(loss_mask)  # has shape (bs, seq_len)
 
@@ -106,8 +103,19 @@ class DRQN(nn.Module):
         # h1 = h1.unsqueeze(0).detach()
         # c1 = c1.unsqueeze(0).detach()
 
-        pred, _ = online_net(states, (h0, c0), inference=False)
-        next_pred, _ = target_net(next_states, (h1, c1), inference=False)
+        pred, _ = online_net(states, (h0, c0), inference=False, max_length=max_length)
+        next_pred, _ = target_net(next_states, (h1, c1), inference=False, max_length=max_length)
+
+        loss_mask.to(device)
+        actions.to(device)
+        rewards.to(device)
+        masks.to(device)
+        h0.to(device)
+        c0.to(device)
+        h1.to(device)
+        c1.to(device)
+        pred.to(device)
+        next_pred.to(device)
 
         # if burn_in_length > 0:
         #     pred = slice_burn_in(pred)
