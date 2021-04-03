@@ -2,8 +2,8 @@ import sys
 
 from setuptools import find_packages, setup
 
-if sys.version_info < (3, 7):
-    sys.stderr.write('Python >= 3.7 is required.')
+if sys.version_info < (3, 6):
+    sys.stderr.write('Python >= 3.6 is required.')
     sys.exit(1)
 
 setup(
