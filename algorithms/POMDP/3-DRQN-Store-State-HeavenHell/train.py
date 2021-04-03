@@ -30,12 +30,14 @@ parser.add_argument('--lr', type=float, help='learning rate (e.g., 0.001)')
 parser.add_argument('--use_experts', type=int, help='whether to use two experts to guide exploration (0 for on; 1 for off)')
 parser.add_argument('--seed', type=int, help='seed for np.random.seed and torch.manual_seed (e.g., 42)')
 parser.add_argument('--debug_mode', type=int, default=0)
+parser.add_argument('--device_str', type=str, default="cuda" if torch.cuda.is_available() else "cpu")
 
 args = parser.parse_args()
 lr = args.lr
 use_experts = bool(args.use_experts)
 seed = args.seed
 debug_mode = bool(args.debug_mode)
+device = torch.device(args.device_str)
 
 if debug_mode: print('Running debug mode (i.e., without wandb)')
 
@@ -59,9 +61,6 @@ replay_memory_capacity = max_episodes  # can store 500 episodes
 batch_size = 32
 update_target = 1000  # once per 1000 steps
 log_interval = 10  # one console log per 10 episodes
-
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = 'cpu'
 
 # ==================================================
 
