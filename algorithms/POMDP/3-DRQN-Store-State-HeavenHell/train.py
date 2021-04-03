@@ -60,7 +60,8 @@ batch_size = 32
 update_target = 1000  # once per 1000 steps
 log_interval = 10  # one console log per 10 episodes
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = 'cpu'
 
 # ==================================================
 
