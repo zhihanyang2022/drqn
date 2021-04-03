@@ -54,10 +54,10 @@ env_name = "HeavenHell"
 gamma = 0.99
 sequence_length = 20
 
-max_episodes = int(100 * 1e3)  # 10k episodes; less than or equal to 10k * 20 = 200k steps
+max_episodes = int(100 * 1e3)  # 100k episodes; less than or equal to 100k * 20 = 2000k or 2M steps
 epsilon = 1.0  # initial uniform exploration
 terminal_epsilon = 0.1
-decay_over_episodes = int(3 * 1e3)  # 3k episodes
+decay_over_episodes = int(30 * 1e3)  # 30k episodes
 decay_per_episode = (epsilon - terminal_epsilon) / decay_over_episodes
 
 replay_memory_capacity = max_episodes  # can store 500 episodes
@@ -209,7 +209,7 @@ for e in range(max_episodes):
         current_time = time.perf_counter()
         print('==========')
         print(f'Iteration {e} / {max_episodes} | Running score {round(running_score, 2)} | Epsilon {round(epsilon, 2)}')
-        total_duration = (current_time - start_time) * (max_episodes / e)
-        remaining_duration = total_duration - (current_time - start_time)
+        average_duration_per_episode = (current_time - start_time) / e
+        remaining_duration = average_duration_per_episode * (max_episodes - e)
         print(f'Time remaining: {round((remaining_duration) / 60 / 60, 2)} hours')
         print('==========')
