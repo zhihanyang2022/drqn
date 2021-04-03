@@ -1,6 +1,0 @@
-numpy
-PyYAML
-torch
-tensorflow
-tensorboard
-tensorboardX

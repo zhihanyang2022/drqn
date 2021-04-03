@@ -23,17 +23,21 @@ use_wandb = True
 # ==================================================
 # hyper-parameters that need tuning
 
-# e.g. python POMDP/3-DRQN-Store-State-HeavenHell/train.py --lr=0.00005 --use_experts=0 --seed=1
+# e.g. python algorithms/POMDP/3-DRQN-Store-State-HeavenHell/train.py --lr=0.00005 --use_experts=0 --seed=1 --debug_mode=1
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, help='learning rate (e.g., 0.001)')
 parser.add_argument('--use_experts', type=int, help='whether to use two experts to guide exploration (0 for on; 1 for off)')
 parser.add_argument('--seed', type=int, help='seed for np.random.seed and torch.manual_seed (e.g., 42)')
+parser.add_argument('--debug_mode', type=int, default=0)
 
 args = parser.parse_args()
 lr = args.lr
 use_experts = bool(args.use_experts)
 seed = args.seed
+debug_mode = bool(args.debug_mode)
+
+if debug_mode: print('Running debug mode (i.e., without wandb)')
 
 # ==================================================
 
@@ -63,16 +67,18 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # ==================================================
 # logging settings
 
-group_name = f"env_name={env_name} lr={lr} use_experts={use_experts}"
-run_name = f"env_name={env_name} lr={lr} use_experts={use_experts} seed={seed}"
+if debug_mode is False:
 
-wandb.init(
-    project="drqn",
-    entity='pomdpr',
-    group=group_name,
-    settings=wandb.Settings(_disable_stats=True),
-    name=run_name
-)
+    group_name = f"env_name={env_name} lr={lr} use_experts={use_experts}"
+    run_name = f"env_name={env_name} lr={lr} use_experts={use_experts} seed={seed}"
+
+    wandb.init(
+        project="drqn",
+        entity='pomdpr',
+        group=group_name,
+        settings=wandb.Settings(_disable_stats=True),
+        name=run_name
+    )
 
 # ==================================================
 
@@ -187,7 +193,8 @@ for e in range(max_episodes):
 
     # wandb logging
 
-    wandb.log({"return": reward})
+    if debug_mode is False:
+        wandb.log({"return": reward})
 
     # console logging
 
