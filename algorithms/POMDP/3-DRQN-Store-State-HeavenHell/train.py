@@ -158,9 +158,7 @@ for e in range(max_episodes):
     obs = one_hot_encode_obs(obs)
     obs = torch.Tensor(obs).to(device)
 
-    hidden = (torch.Tensor().new_zeros(1, 1, 16), torch.Tensor().new_zeros(1, 1, 16))
-    hidden[0].to(device)
-    hidden[1].to(device)
+    hidden = (torch.Tensor().new_zeros(1, 1, 16).to(device), torch.Tensor().new_zeros(1, 1, 16).to(device))
 
     while not done:
 
