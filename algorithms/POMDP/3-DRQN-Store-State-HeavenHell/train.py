@@ -205,9 +205,10 @@ for e in range(max_episodes):
 
     running_score = 0.95 * running_score + 0.05 * reward
 
-    if e % log_interval == 0 and e != 0:
+    if e % log_interval == 0 and e != 0:  # prevent division by zero
         current_time = time.perf_counter()
         print('==========')
         print(f'Iteration {e} / {max_episodes} | Running score {round(running_score, 2)} | Epsilon {round(epsilon, 2)}')
-        print(f'Time remaining: {round((current_time - start_time) * (max_episodes / e) / 60 / 60, 2)} hours')
+        total_time = (current_time - start_time) * (max_episodes / e)
+        print(f'Time remaining: {round((total_time - current_time) / 60 / 60, 2)} hours')
         print('==========')
