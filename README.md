@@ -13,6 +13,8 @@ How to use this repo:
 - `wandb login`
 - Do anything you want now.
 
+Note that if you modify the Heaven-Hell pomdp file (e.g., modify the initial belief or the starting state distribution) you will need to re-install gym-pomdp for the change to take effect.
+
 ---
 
 Below is README from the original repo.
