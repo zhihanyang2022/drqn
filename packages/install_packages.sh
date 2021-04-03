@@ -3,7 +3,9 @@
 #     conda activate pomdpr
 # run this script in drqn/packages
 pip install numpy scipy torch gym PyYAML wandb
-cd rl_parsers || exit
+cd indextools || exit
+pip install .
+cd ../rl_parsers || exit
 pip install -r requirements.txt
 pip install .
 cd ../gym-pomdps || exit
