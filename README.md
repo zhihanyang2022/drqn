@@ -6,6 +6,8 @@ Modified from https://github.com/g6ling/Reinforcement-Learning-Pytorch-Cartpole.
 
 ---
 
+Below is README from the original repo.
+
 # PyTorch CartPole Example
 Simple Cartpole example writed with pytorch.
 
