@@ -11,6 +11,7 @@ How to use this repo:
 - `cd ..` back to the top level of the repo
 - Test your installation using `python algorithms/POMDP/3-DRQN-Store-State-HeavenHell/train.py --lr=0.00005 --use_experts=0 --seed=1 --debug_mode=1` where `debug_mode=1` makes sure that `wandb` is not used
 - `wandb login`
+- Do anything you want now.
 
 ---
 
