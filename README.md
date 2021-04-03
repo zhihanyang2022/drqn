@@ -1,6 +1,7 @@
 Modified from https://github.com/g6ling/Reinforcement-Learning-Pytorch-Cartpole.
 
 How to use this repo:
+- Make sure that you have installed miniconda (for Linux, see `https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html`)
 - `cd` into this repo
 - `cd packages`
 - `conda create --name pomdpr python=3.7` where `pomdpr` stands for POMDP and Robotics
