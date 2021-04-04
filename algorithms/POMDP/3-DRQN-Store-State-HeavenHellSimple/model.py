@@ -88,7 +88,7 @@ class DRQN(nn.Module):
         # batch.state is a list of tensors of shape (seq_length, input_dim)
         # so seq.size()[0] = the length of the sequence
         lengths = np.array([seq.size()[0] for seq in batch.state])
-        max_length = np.max(lengths)
+        max_length = int(np.max(lengths))
 
         # ===== compute loss mask =====
 
