@@ -24,13 +24,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, help='learning rate (e.g., 0.001)')
 parser.add_argument('--use_experts', type=int, help='whether to use two experts to guide exploration (0 for on; 1 for off)')
 parser.add_argument('--seed', type=int, help='seed for np.random.seed and torch.manual_seed (e.g., 42)')
-parser.add_argument('--debug_mode', type=int, default=0)
+parser.add_argument('--debug_mode', type=int)
+parser.add_argument('--use_deeper_net', type=int)
 
 args = parser.parse_args()
 lr = args.lr
 use_experts = bool(args.use_experts)
 seed = args.seed
 debug_mode = bool(args.debug_mode)
+use_deeper_net = bool(args.use_deeper_net)
 
 if debug_mode: print('Running debug mode (i.e., without wandb)')
 
@@ -62,8 +64,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if debug_mode is False:
 
-    group_name = f"lr={lr} use_experts={use_experts}"
-    run_name = f"lr={lr} use_experts={use_experts} seed={seed}"
+    group_name = f"lr={lr} use_experts={use_experts} use_deeper_net={use_deeper_net}"
+    run_name = f"lr={lr} use_experts={use_experts} use_deeper_net={use_deeper_net} seed={seed}"
 
     wandb.init(
         project="drqn",
@@ -105,8 +107,8 @@ num_actions = env.action_space_dim
 print('observation size:', num_inputs)
 print('action size:', num_actions)
 
-online_net = DRQN(num_inputs, num_actions, sequence_length)
-target_net = DRQN(num_inputs, num_actions, sequence_length)
+online_net = DRQN(num_inputs, num_actions, sequence_length, use_deeper_net)
+target_net = DRQN(num_inputs, num_actions, sequence_length, use_deeper_net)
 update_target_model(online_net, target_net)
 
 optimizer = optim.Adam(online_net.parameters(), lr=lr)
@@ -157,7 +159,7 @@ for e in range(max_episodes):
         if len(memory) > batch_size:
 
             batch = memory.sample(batch_size)
-            loss = DRQN.train_model(online_net, target_net, optimizer, batch, batch_size, sequence_length, gamma)
+            loss = DRQN.train_model(online_net, target_net, optimizer, batch, batch_size, sequence_length, gamma, use_deeper_net)
 
             if steps % update_target == 0:
                 update_target_model(online_net, target_net)

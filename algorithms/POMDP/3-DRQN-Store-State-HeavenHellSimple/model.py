@@ -10,36 +10,77 @@ from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_se
 
 class DRQN(nn.Module):
 
-    def __init__(self, num_inputs, num_outputs, sequence_length):
+    def __init__(self, num_inputs, num_outputs, sequence_length, use_deeper_net):
 
         super(DRQN, self).__init__()
         self.num_inputs = num_inputs
         self.num_outputs = num_outputs
+        self.use_deeper_net = use_deeper_net
 
         self.sequence_length = sequence_length
 
-        self.lstm = nn.LSTM(input_size=num_inputs, hidden_size=16, batch_first=True)
-        self.fc1 = nn.Linear(16, 128)
-        self.fc2 = nn.Linear(128, num_outputs)
+        if self.use_deeper_net:
+
+            self.pre_process_net = nn.Sequential(
+                nn.Linear(num_inputs, 64),
+                nn.LeakyReLU(negative_slope=0.1),
+                nn.Linear(64, 32),
+                nn.LeakyReLU(negative_slope=0.1),
+                nn.Linear(32, 16),
+                nn.LeakyReLU(negative_slope=0.1),
+            )
+
+            self.lstm = nn.LSTM(input_size=16, hidden_size=16, batch_first=True)
+
+        else:  # original code
+
+            self.lstm = nn.LSTM(input_size=self.num_inputs, hidden_size=16, batch_first=True)
+
+        self.post_process_net = nn.Sequential(
+            nn.Linear(16, 128),
+            nn.ReLU(),
+            nn.Linear(128, num_outputs)
+        )
 
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.xavier_uniform(m.weight)
 
-    def forward(self, x, hidden=None, inference=True):
-        # x [batch_size, sequence_length, num_inputs]
-        out, hidden = self.lstm(x, hidden)
-        if not inference:
-            out, _ = pad_packed_sequence(sequence=out, batch_first=True, total_length=self.sequence_length)
+    def forward(self, x, hidden=None, inference=True, lengths=None, max_length=None):
 
-        out = F.relu(self.fc1(out))
-        qvalue = self.fc2(out)
+        if self.use_deeper_net:
 
-        return qvalue, hidden
+            mid = self.pre_process_net(x)
 
+            if not inference:
+                mid = pack_padded_sequence(
+                    mid,
+                    lengths=lengths,
+                    batch_first=True,
+                    enforce_sorted=False
+                )
+
+            mid, hidden = self.lstm(mid, hidden)
+
+            if not inference:
+                mid, _ = pad_packed_sequence(sequence=mid, batch_first=True, total_length=max_length)
+
+            q_value = self.post_process_net(mid)
+
+            return q_value, hidden
+
+        else:  # original code
+
+            out, hidden = self.lstm(x, hidden)
+            if not inference:
+                out, _ = pad_packed_sequence(sequence=out, batch_first=True, total_length=max_length)
+
+            q_value = self.post_process_net(x)
+
+            return q_value, hidden
 
     @classmethod
-    def train_model(cls, online_net, target_net, optimizer, batch, batch_size, sequence_length, gamma):
+    def train_model(cls, online_net, target_net, optimizer, batch, batch_size, sequence_length, gamma, use_deeper_net):
 
         # def slice_burn_in(item):
         #     return item[:, burn_in_length:, :]
@@ -66,19 +107,26 @@ class DRQN(nn.Module):
         loss_mask = lower_triangular_matrix[lengths-1]  # first convert from 1-based to 0-based indexing
         loss_mask = torch.tensor(loss_mask)  # has shape (bs, seq_len)
 
-        states = pack_padded_sequence(
-            pad_sequence(batch.state, batch_first=True),
-            lengths=lengths,
-            batch_first=True,
-            enforce_sorted=False
-        )  # ready to be inputted into DRQN
+        if use_deeper_net:
 
-        next_states = pack_padded_sequence(
-            pad_sequence(batch.next_state, batch_first=True),
-            lengths=lengths,
-            batch_first=True,
-            enforce_sorted=False
-        )
+            states = pad_sequence(batch.state, batch_first=True)
+            next_states = pad_sequence(batch.next_state, batch_first=True)
+
+        else:
+
+            states = pack_padded_sequence(
+                pad_sequence(batch.state, batch_first=True),
+                lengths=lengths,
+                batch_first=True,
+                enforce_sorted=False
+            )
+
+            next_states = pack_padded_sequence(
+                pad_sequence(batch.next_state, batch_first=True),
+                lengths=lengths,
+                batch_first=True,
+                enforce_sorted=False
+            )
 
         # max_length == sequence_length most of the times, but not always
         actions = pad_sequence(batch.action, batch_first=True).view(batch_size, max_length, -1).long()  # has shape (bs, seq_len, 1)
@@ -106,8 +154,8 @@ class DRQN(nn.Module):
         # h1 = h1.unsqueeze(0).detach()
         # c1 = c1.unsqueeze(0).detach()
 
-        pred, _ = online_net(states, (h0, c0), inference=False)
-        next_pred, _ = target_net(next_states, (h1, c1), inference=False)
+        pred, _ = online_net(states, (h0, c0), inference=False, max_length=max_length, lengths=lengths)
+        next_pred, _ = target_net(next_states, (h1, c1), inference=False, max_length=max_length, lengths=lengths)
 
         # if burn_in_length > 0:
         #     pred = slice_burn_in(pred)
