@@ -19,14 +19,14 @@ from heaven_hell_simple import HeavenHellSimple
 # hyper-parameters that need tuning
 
 # e.g. python algorithms/POMDP/3-DRQN-Store-State-HeavenHellSimple/train.py --lr=0.00005 --use_experts=0 --seed=1 --debug_mode=1
-# python algorithms/POMDP/3-DRQN-Store-State-HeavenHellSimple/train.py --lr=0.00005 --use_experts=0 --seed=1 --debug_mode=0 --use_deeper_net=1
+# python algorithms/POMDP/3-DRQN-Store-State-HeavenHellSimple/train.py --lr=0.00001 --use_experts=0 --seed=1 --debug_mode=0 --use_deeper_net=1
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, help='learning rate (e.g., 0.001)')
 parser.add_argument('--use_experts', type=int, help='whether to use two experts to guide exploration (0 for on; 1 for off)')
 parser.add_argument('--seed', type=int, help='seed for np.random.seed and torch.manual_seed (e.g., 42)')
 parser.add_argument('--debug_mode', type=int)
-parser.add_arugmnet('--device_str', type=str)
+parser.add_argument('--device_str', type=str)
 parser.add_argument('--use_deeper_net', type=int)
 
 args = parser.parse_args()
