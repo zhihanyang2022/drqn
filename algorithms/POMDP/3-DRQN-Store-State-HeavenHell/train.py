@@ -231,6 +231,8 @@ for e in range(max_episodes):
             if (met_priest is False) and (next_obs == 9 or next_obs == 10):  # the agent visits the priest for the first time
                 total_reward = reward + 1
                 met_priest = True
+            else:
+                total_reward = reward
         else:
             total_reward = reward
 
