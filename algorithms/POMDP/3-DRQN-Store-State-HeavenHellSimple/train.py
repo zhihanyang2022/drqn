@@ -18,8 +18,16 @@ from heaven_hell_simple import HeavenHellSimple
 # ==================================================
 # hyper-parameters that need tuning
 
-# e.g. python algorithms/POMDP/3-DRQN-Store-State-HeavenHellSimple/train.py --lr=0.00005 --use_experts=0 --seed=1 --debug_mode=1
-# python algorithms/POMDP/3-DRQN-Store-State-HeavenHellSimple/train.py --lr=0.00001 --use_experts=0 --seed=1 --debug_mode=1 --device_str=cpu --use_deeper_net=1
+"""
+python algorithms/POMDP/3-DRQN-Store-State-HeavenHellSimple/train.py \
+--lr=0.00001 \
+--use_experts=0 \
+--debug_mode=0 \
+--device_str=cpu \
+--use_deeper_net=1 \
+--use_early_stopping=1 \
+--seed=1
+"""
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, help='learning rate (e.g., 0.001)')
@@ -28,6 +36,7 @@ parser.add_argument('--seed', type=int, help='seed for np.random.seed and torch.
 parser.add_argument('--debug_mode', type=int)
 parser.add_argument('--device_str', type=str)
 parser.add_argument('--use_deeper_net', type=int)
+parser.add_argument('--use_early_stopping', type=int)
 
 args = parser.parse_args()
 lr = args.lr
@@ -36,6 +45,7 @@ seed = args.seed
 debug_mode = bool(args.debug_mode)
 device = torch.device(args.device_str)
 use_deeper_net = bool(args.use_deeper_net)
+use_early_stopping = bool(args.use_early_stopping)
 
 if debug_mode: print('Running debug mode (i.e., without wandb)')
 
@@ -58,6 +68,9 @@ batch_size = 32
 update_target = 1000  # once per 1000 steps
 log_interval = 10  # one console log per 10 episodes
 
+target_score = 0.99
+patience = 3
+
 # ==================================================
 
 # ==================================================
@@ -65,8 +78,13 @@ log_interval = 10  # one console log per 10 episodes
 
 if debug_mode is False:
 
-    group_name = f"lr={lr} use_experts={use_experts} use_deeper_net={use_deeper_net}"
-    run_name = f"lr={lr} use_experts={use_experts} use_deeper_net={use_deeper_net} seed={seed}"
+    group_name = f"lr={lr} use_experts={use_experts} use_deeper_net={use_deeper_net} use_early_stopping={use_early_stopping}"
+    run_name = f"seed={seed}"
+
+    print('Group name:')
+    print(group_name)
+    print('Run name:')
+    print(run_name)
 
     wandb.init(
         project="drqn",
@@ -127,6 +145,8 @@ memory = Memory(replay_memory_capacity, sequence_length)
 steps = 0  # number of actions taken in the environment / number of parameter updates
 loss = 0
 running_score = 0
+converged = False
+patience_used = 0
 
 for e in range(max_episodes):
 
@@ -138,12 +158,16 @@ for e in range(max_episodes):
 
     hidden = (torch.Tensor().new_zeros(1, 1, 16), torch.Tensor().new_zeros(1, 1, 16))
 
+    episode_len = 0  # incremented per action taken
+
     while not done:
 
         if use_experts is False:  # do the normal thing
             action, new_hidden = get_action(obs, target_net, epsilon, env, hidden)
         else:
             action, new_hidden = get_action(obs, target_net, epsilon, env, hidden, expert_actions=env.get_expert_actions())
+
+        episode_len += 1
 
         next_obs, reward, done = env.step(action)
         next_obs = one_hot_encode_obs(next_obs)
@@ -152,14 +176,26 @@ for e in range(max_episodes):
 
         mask = 0 if done else 1
 
-        memory.push(obs, next_obs, action, reward, mask, hidden)
+        if use_early_stopping is False:
+            memory.push(obs, next_obs, action, reward, mask, hidden)
+        else:
+            if converged is False:
+                memory.push(obs, next_obs, action, reward, mask, hidden)
         hidden = new_hidden
 
         obs = next_obs
 
-        if len(memory) > batch_size:
+        if len(memory) > batch_size and (use_early_stopping is False or converged is False):
+
+            # Result of use_early_stopping is False or converged is False
+            # use_early_stopping | converged | results
+            # True                 True        False -> avoid updated
+            # True                 False       True  -> do update
+            # False                True        True  -> do update
+            # False                False       True  -> do update
 
             batch = memory.sample(batch_size)
+
             loss = DRQN.train_model(online_net, target_net, optimizer, batch, batch_size, sequence_length, gamma, use_deeper_net)
 
             if steps % update_target == 0:
@@ -173,11 +209,20 @@ for e in range(max_episodes):
     # wandb logging
 
     if debug_mode is False:
-        wandb.log({"return": reward})
+        wandb.log({
+            "return": reward,
+            "episode_len": episode_len
+        })
 
     # console logging
 
     running_score = 0.95 * running_score + 0.05 * reward
+    if running_score >= target_score:
+        patience_used += 1
+        if patience_used >= patience:
+            converged = True
+    else:
+        patience_used = 0
 
     if e % log_interval == 0:
         print(f'Iteration {e} / {max_episodes} | Running score {round(running_score, 2)} | Epsilon {round(epsilon, 2)}')
