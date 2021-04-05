@@ -224,17 +224,18 @@ for e in range(max_episodes):
         episode_len += 1
 
         next_obs, reward, done, _ = env.step(action)
+
+        if use_reward_shaping:
+            if next_obs == int(torch.argmax(obs)):  # the agent just took an action into the wall
+                reward -= 0.1
+            if (met_priest is False) and (next_obs == 9 or next_obs == 10):  # the agent visits the priest for the first time
+                reward += 1
+
         next_obs = one_hot_encode_obs(next_obs)
 
         next_obs = torch.Tensor(next_obs).to(device)
 
         mask = 0 if done else 1
-
-        if use_reward_shaping:
-            if next_obs == obs:  # the agent just took an action into the wall
-                reward -= 0.1
-            if (met_priest is False) and (next_obs == 9 or next_obs == 10):  # the agent visits the priest for the first time
-                reward += 1
 
         if use_early_stopping is False:
             memory.push(obs, next_obs, action, reward, mask, hidden)
