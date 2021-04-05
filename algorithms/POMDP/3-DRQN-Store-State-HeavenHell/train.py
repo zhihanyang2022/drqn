@@ -246,7 +246,7 @@ for e in range(max_episodes):
 
         obs = next_obs
 
-        if len(memory) > batch_size and (use_early_stopping is False or converged is False):
+        if len(memory) > batch_size and (use_early_stopping is False or converged is False) and (epsilon < 0.2):
 
             # Result of use_early_stopping is False or converged is False
             # use_early_stopping | converged | results
