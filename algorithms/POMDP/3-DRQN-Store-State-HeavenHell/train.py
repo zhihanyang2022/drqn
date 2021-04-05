@@ -117,7 +117,7 @@ patience = 3
 
 if debug_mode is False:
 
-    group_name = f"env_name={env_name} lr={lr} use_experts={use_experts} use_deeper_net={use_deeper_net} use_early_stopping={use_early_stopping}"
+    group_name = f"env_name={env_name} lr={lr} use_experts={use_experts} use_deeper_net={use_deeper_net} use_early_stopping={use_early_stopping} use_reward_shaping={use_reward_shaping}"
     run_name = f"seed={seed}"
 
     wandb.init(
