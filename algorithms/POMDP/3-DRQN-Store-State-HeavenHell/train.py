@@ -99,10 +99,10 @@ sequence_length = 20
 max_episodes = int(100 * 1e3)  # 100k episodes; less than or equal to 100k * 20 = 2000k or 2M steps
 epsilon = 1.0  # initial uniform exploration
 terminal_epsilon = 0.1
-decay_over_episodes = int(10 * 1e3)  # 10k episodes
+decay_over_episodes = int(30 * 1e3)  # 10k episodes
 decay_per_episode = (epsilon - terminal_epsilon) / decay_over_episodes
 
-replay_memory_capacity = int(10 * 1e3)  # 10k episodes
+replay_memory_capacity = int(30 * 1e3)  # 10k episodes
 batch_size = 32
 update_target = 1000  # once per 1000 steps
 log_interval = 10  # one console log per 10 episodes
@@ -251,7 +251,7 @@ for e in range(max_episodes):
 
         obs = next_obs
 
-        if len(memory) > batch_size and (use_early_stopping is False or converged is False) and (epsilon <= 0.15):
+        if len(memory) > batch_size and (use_early_stopping is False or converged is False):
 
             # Result of use_early_stopping is False or converged is False
             # use_early_stopping | converged | results
