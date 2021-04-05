@@ -227,9 +227,11 @@ for e in range(max_episodes):
 
         if use_reward_shaping:
             if next_obs == int(torch.argmax(obs)):  # the agent just took an action into the wall
-                reward -= 0.1
+                total_reward = reward - 0.1
             if (met_priest is False) and (next_obs == 9 or next_obs == 10):  # the agent visits the priest for the first time
-                reward += 1
+                total_reward = reward + 1
+        else:
+            total_reward = reward
 
         next_obs = one_hot_encode_obs(next_obs)
 
@@ -238,10 +240,10 @@ for e in range(max_episodes):
         mask = 0 if done else 1
 
         if use_early_stopping is False:
-            memory.push(obs, next_obs, action, reward, mask, hidden)
+            memory.push(obs, next_obs, action, total_reward, mask, hidden)
         else:
             if converged is False:
-                memory.push(obs, next_obs, action, reward, mask, hidden)
+                memory.push(obs, next_obs, action, total_reward, mask, hidden)
         hidden = new_hidden
 
         obs = next_obs
