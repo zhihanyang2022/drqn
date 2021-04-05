@@ -18,10 +18,8 @@ env = gym.make(env_conf['name'])
 
 print('Action space:', env.action_space)
 
-initial_obs_list = []
-for i in range(100):
-    initial_obs_list.append(env.reset()[0])
-
-for index in range(10):
-    if index in initial_obs_list:
-        print(index)
+env.reset()
+env.state = 7
+print(env.state)
+env.step(2)
+print(env.state)

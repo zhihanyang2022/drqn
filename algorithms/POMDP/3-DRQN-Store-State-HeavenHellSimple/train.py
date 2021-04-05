@@ -159,6 +159,7 @@ for e in range(max_episodes):
     hidden = (torch.Tensor().new_zeros(1, 1, 16), torch.Tensor().new_zeros(1, 1, 16))
 
     episode_len = 0  # incremented per action taken
+    trajectory = []
 
     while not done:
 
@@ -168,6 +169,10 @@ for e in range(max_episodes):
             action, new_hidden = get_action(obs, target_net, epsilon, env, hidden, expert_actions=env.get_expert_actions())
 
         episode_len += 1
+
+        trajectory.append(
+            (episode_len, int(torch.argmax(obs)), int(action))
+        )
 
         next_obs, reward, done = env.step(action)
         next_obs = one_hot_encode_obs(next_obs)
@@ -203,6 +208,10 @@ for e in range(max_episodes):
 
         steps += 1
 
+    trajectory.append(
+        (episode_len + 1, int(torch.argmax(obs)), None)
+    )
+
     if epsilon > terminal_epsilon:
         epsilon -= decay_per_episode
 
@@ -226,3 +235,4 @@ for e in range(max_episodes):
 
     if e % log_interval == 0:
         print(f'Iteration {e} / {max_episodes} | Running score {round(running_score, 2)} | Epsilon {round(epsilon, 2)}')
+        print(trajectory)

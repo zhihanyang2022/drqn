@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
-from model2 import DRQN
+from model import DRQN
 from memory import Memory
 # from tensorboardX import SummaryWriter
 
@@ -31,12 +31,37 @@ test run code:
 python algorithms/POMDP/3-DRQN-Store-State-HeavenHell/train.py \
 --lr=0.00001 \
 --use_experts=0 \
---debug_mode=1 \
+--debug_mode=0 \
 --device_str=cuda \
 --use_deeper_net=1 \
 --use_early_stopping=0 \
 --use_reward_shaping=1 \
 --seed=1
+
+first group (seed 1 2 3):
+
+python algorithms/POMDP/3-DRQN-Store-State-HeavenHell/train.py \
+--lr=0.00001 \
+--use_experts=0 \
+--debug_mode=0 \
+--device_str=cuda \
+--use_deeper_net=1 \
+--use_early_stopping=0 \
+--use_reward_shaping=0 \
+--seed=1
+
+second group (seed 1 2 3):
+
+python algorithms/POMDP/3-DRQN-Store-State-HeavenHell/train.py \
+--lr=0.00001 \
+--use_experts=1 \
+--debug_mode=0 \
+--device_str=cuda \
+--use_deeper_net=1 \
+--use_early_stopping=0 \
+--use_reward_shaping=0 \
+--seed=1
+
 """
 
 parser = argparse.ArgumentParser()
