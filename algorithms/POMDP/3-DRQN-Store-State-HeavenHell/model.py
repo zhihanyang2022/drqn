@@ -193,4 +193,4 @@ class DRQN(nn.Module):
         qvalue, hidden = self.forward(state, hidden)
             
         _, action = torch.max(qvalue, 2)
-        return action.numpy()[0][0], hidden
+        return action.cpu().numpy()[0][0], hidden
